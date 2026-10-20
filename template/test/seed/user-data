@@ -1,0 +1,14 @@
+#cloud-config
+users:
+  - name: root
+    lock_passwd: false
+    
+    ssh_authorized_keys:
+       - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCXe3L0CdATKMAdoNgNnsNdcDZim1o0d8JVnotfcQckzeNoQ8RwVb2Mnt1iBOWUuReh1dhVckOEIvcqSZ3ULcrZ2S170PgjQWaunx9jvKylT1xoYEG1xUd3Keu067S7UZujkmL3YZu8pBtQHvPZ9PQJjSrsEQNPvmpNF4JwwuW/+1jS0CCyZaHgr2zPvjKXKG4qJTcmXCzok8faLudAD56LWbamSx6cjnBt2HHvxh2LAPWq8UXfs4ffpEaLwdKlIGkHRkcpcXwQd0o7UBO+LGbdrq8gNGtR7IwewOG3haSCiYDDw4oPM25pcJ4xSxOU5t/DkuyEabvkwa7+GJ1FEmfgdjXNVgwEVRjmQM6OYx6kUllt0QIbL1659Yekew8qXW+vgzGjAa8dhZZeD157Kn5XEM7W0NoNw0v7EYkld+JMAs9QK9D14TWMF8VL0RT4UOvueZ+4XoHS3ZwPmi3sa8CwMOQ4NRw2VqLBCk/24FUk/aqmrI0veTKnQhAbi3xHRGc= luke@luke-neon
+ssh_pwauth: false
+disable_root: false
+
+chpasswd:
+  list: |
+    root:qwe123
+  expire: false

@@ -1,0 +1,7 @@
+images/*
+!images/.gitkeep
+
+vms/*
+!vms/.gitkeep
+
+template/*/seed.iso
