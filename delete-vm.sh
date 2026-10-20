@@ -1,3 +1,5 @@
+#!/bin/bash
+
 VBoxManage controlvm test poweroff
 VBoxManage unregistervm test --delete
 rm -R ./vms/test
