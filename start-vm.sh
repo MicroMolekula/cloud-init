@@ -1,12 +1,46 @@
 #!/bin/bash
+set -euo pipefail
 
-VBoxManage createvm --name test --ostype Ubuntu_arm64 --basefolder "$PWD/vms" --register
-VBoxManage modifyvm test --memory 2048 --cpus 2 --nic1 bridged --bridgeadapter1 "en0: Wi-Fi" --graphicscontroller none --uart1 0x3F8 4 --uartmode1 file "$PWD/vms/test/console.log"
+ENV_FILE="./hosts/${2:-$(hostname)}.env"
 
-hdiutil makehybrid -o ./template/test/seed.iso -hfs -joliet -iso -default-volume-name cidata ./template/test/seed
+if [ ! -f "$ENV_FILE" ]; then 
+    echo>&2 "Профиль не найден: $ENV_FILE"
+    echo>&2 "Доступные:"
+    echo>&2 "$(for f in ./hosts/*.env; do
+                    basename -s .env "$f"
+                done)"
+    echo>&2 "Использование: $0 <имя_VM> [название профиля без .env]"
+    exit 1
+fi 
 
-VBoxManage storagectl test --name VirtIO --add virtio --controller VirtIO
-VBoxManage storageattach test --storagectl VirtIO --port 0 --device 0 --type hdd --medium ./images/ubuntu.vdi --mtype immutable
-VBoxManage storageattach test --storagectl VirtIO --port 1 --device 0 --type dvddrive --medium ./template/test/seed.iso
+source "$ENV_FILE"
 
-VBoxManage startvm test --type headless
+VM_NAME="${1:?не указан параметр VM_NAME}"
+BUILD_DIR="./builds/$VM_NAME"
+BASE_IMAGE="./images/ubuntu.vdi"
+SEED_DIR="./template/test/test1"
+
+mkdir -p "$BUILD_DIR"
+
+case "$(uname -s)" in
+    Linux)
+        cloud-localds -N "$SEED_DIR"/network-config "$BUILD_DIR"/seed.iso "$SEED_DIR"/user-data "$SEED_DIR"/meta-data
+        ;;
+    Darwin)
+        rm -f "$BUILD_DIR/seed.iso"
+        hdiutil makehybrid -o "$BUILD_DIR"/seed.iso -hfs -joliet -iso -default-volume-name cidata "$SEED_DIR"
+        ;;
+    *)
+        echo "Отсутствует инструкция для подготовки seed-образа на вашей хостовой ОС: $(uname -s)" >&2
+        exit 1
+        ;;
+esac
+
+VBoxManage createvm --name "$VM_NAME" --ostype "$VM_OSTYPE" --basefolder "$PWD"/vms --register
+VBoxManage modifyvm "$VM_NAME" --memory "$VM_MEMORY_MB" --cpus "$VM_CPUS" --nic1 bridged --bridgeadapter1 "$BRIDGE_ADAPTER" --graphicscontroller none --uart1 0x3F8 4 --uartmode1 file "$PWD"/vms/"$VM_NAME"/console.log
+
+VBoxManage storagectl "$VM_NAME" --name VirtIO --add virtio --controller VirtIO
+VBoxManage storageattach "$VM_NAME" --storagectl VirtIO --port 0 --device 0 --type hdd --medium "$BASE_IMAGE" --mtype immutable
+VBoxManage storageattach "$VM_NAME" --storagectl VirtIO --port 1 --device 0 --type dvddrive --medium "$BUILD_DIR"/seed.iso
+
+VBoxManage startvm "$VM_NAME" --type headless
