@@ -3,41 +3,49 @@
 users:
   - name: root
     lock_passwd: false
-
     ssh_authorized_keys:
        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCXe3L0CdATKMAdoNgNnsNdcDZim1o0d8JVnotfcQckzeNoQ8RwVb2Mnt1iBOWUuReh1dhVckOEIvcqSZ3ULcrZ2S170PgjQWaunx9jvKylT1xoYEG1xUd3Keu067S7UZujkmL3YZu8pBtQHvPZ9PQJjSrsEQNPvmpNF4JwwuW/+1jS0CCyZaHgr2zPvjKXKG4qJTcmXCzok8faLudAD56LWbamSx6cjnBt2HHvxh2LAPWq8UXfs4ffpEaLwdKlIGkHRkcpcXwQd0o7UBO+LGbdrq8gNGtR7IwewOG3haSCiYDDw4oPM25pcJ4xSxOU5t/DkuyEabvkwa7+GJ1FEmfgdjXNVgwEVRjmQM6OYx6kUllt0QIbL1659Yekew8qXW+vgzGjAa8dhZZeD157Kn5XEM7W0NoNw0v7EYkld+JMAs9QK9D14TWMF8VL0RT4UOvueZ+4XoHS3ZwPmi3sa8CwMOQ4NRw2VqLBCk/24FUk/aqmrI0veTKnQhAbi3xHRGc= luke@luke-neon
 ssh_pwauth: false
 disable_root: false
 
+write_files:
+  - path: /etc/garage.toml
+    permissions: '0600'
+    content: |
+      metadata_dir = "/tmp/meta"
+      data_dir = "/tmp/data"
+      db_engine = "sqlite"
+
+      replication_factor = 1
+
+      rpc_bind_addr = "[::]:3901"
+      rpc_public_addr = "127.0.0.1:3901"
+      rpc_secret = "@RPC_SECRET"
+
+      [s3_api]
+      s3_region = "garage"
+      api_bind_addr = "[::]:3900"
+      root_domain = ".s3.garage.localhost"
+      advertise_endpoint = "http://s3.garage.localhost:3900"
+
+      [s3_web]
+      bind_addr = "[::]:3902"
+      root_domain = ".web.garage.localhost"
+      index = "index.html"
+
+      [admin]
+      api_bind_addr = "[::]:3903"
+      admin_token = "@ADMIN_TOKEN"
+      metrics_token = "@METRICS_TOKEN"
+  - permissions: "0711"
+    defer: true
+    source:
+      uri: https://garagehq.deuxfleurs.fr/_releases/v2.4.1/aarch64-unknown-linux-musl/garage
+    path: /usr/bin/garage
+    
 runcmd:
-  - |
-    cat > /etc/garage.toml <<EOF
-    metadata_dir = "/tmp/meta"
-    data_dir = "/tmp/data"
-    db_engine = "sqlite"
+  - sed -i "s|@RPC_SECRET|$(openssl rand -hex 32)|g" /etc/garage.toml
+  - sed -i "s|@ADMIN_TOKEN|$(openssl rand -base64 32)|g" /etc/garage.toml
+  - sed -i "s|@METRICS_TOKEN|$(openssl rand -base64 32)|g" /etc/garage.toml
 
-    replication_factor = 1
-
-    rpc_bind_addr = "[::]:3901"
-    rpc_public_addr = "127.0.0.1:3901"
-    rpc_secret = "$(openssl rand -hex 32)"
-
-    [s3_api]
-    s3_region = "garage"
-    api_bind_addr = "[::]:3900"
-    root_domain = ".s3.garage.localhost"
-    advertise_endpoint = "http://s3.garage.localhost:3900"
-
-    [s3_web]
-    bind_addr = "[::]:3902"
-    root_domain = ".web.garage.localhost"
-    index = "index.html"
-
-    [admin]
-    api_bind_addr = "[::]:3903"
-    admin_token = "$(openssl rand -base64 32)"
-    metrics_token = "$(openssl rand -base64 32)"
-    EOF
-  - wget -O /usr/bin/garage https://garagehq.deuxfleurs.fr/_releases/v2.4.1/aarch64-unknown-linux-musl/garage
-  - chmod +x /usr/bin/garage
 
