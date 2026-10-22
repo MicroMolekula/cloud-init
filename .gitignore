@@ -4,4 +4,7 @@ images/*
 vms/*
 !vms/.gitkeep
 
-template/*/seed.iso
+builds/*
+!builds/.gitkeep
+
+_md_files/*
