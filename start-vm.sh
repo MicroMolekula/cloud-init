@@ -1,30 +1,47 @@
 #!/bin/bash
+set -euo pipefail
 
-VMNAME=$1
-IMAGENAME="ubuntu.vdi"
-BRIDGEINTERFACE="en0: Wi-Fi"
+ENV_FILE="./hosts/${2:-$(hostname)}.env"
 
-if [ -z $VMNAME ]
-then
-    echo "vm's name is required"
-    exit 1;
-fi
+if [ ! -f "$ENV_FILE" ]; then 
+    echo>&2 "Профиль не найден: $ENV_FILE"
+    echo>&2 "Доступные:"
+    echo>&2 "$(for f in ./hosts/*.env; do
+                    basename -s .env "$f"
+                done)"
+    echo>&2 "Использование: $0 <имя_VM> [название профиля без .env]"
+    exit 1
+fi 
 
-if [[ ! -e "$PWD/template/$VMNAME" ]]
-then
-    echo "cloud-init template not found"
-    exit 1;
-fi
+source "$ENV_FILE"
 
-VBoxManage createvm --name $VMNAME --ostype Ubuntu_arm64 --basefolder "$PWD/vms" --register
-VBoxManage modifyvm $VMNAME --memory 2048 --cpus 2 --nic1 bridged --bridgeadapter1 "$BRIDGEINTERFACE" --graphicscontroller none --uart1 0x3F8 4 --uartmode1 file "$PWD/vms/$VMNAME/console.log"
+VM_NAME="${1:?не указан параметр VM_NAME}"
+BUILD_DIR="./builds/$VM_NAME"
+BASE_IMAGE="./images/ubuntu.vdi"
+SEED_DIR="./template/test/test1"
 
-hdiutil makehybrid -ov -o "$PWD/template/$VMNAME/seed.iso" -hfs -joliet -iso -default-volume-name cidata "$PWD/template/$VMNAME/config"
+mkdir -p "$BUILD_DIR"
 
-VBoxManage storagectl $VMNAME --name VirtIO --add virtio --controller VirtIO
-VBoxManage storageattach $VMNAME --storagectl VirtIO --port 0 --device 0 --type hdd --medium "$PWD/images/$IMAGENAME" --mtype immutable
-VBoxManage storageattach $VMNAME --storagectl VirtIO --port 1 --device 0 --type dvddrive --medium "$PWD/template/$VMNAME/seed.iso"
+case "$(uname -s)" in
+    Linux)
+        cloud-localds -N "$SEED_DIR"/network-config "$BUILD_DIR"/seed.iso "$SEED_DIR"/user-data "$SEED_DIR"/meta-data
+        ;;
+    Darwin)
+        rm -f "$BUILD_DIR/seed.iso"
+        hdiutil makehybrid -o "$BUILD_DIR"/seed.iso -hfs -joliet -iso -default-volume-name cidata "$SEED_DIR"
+        ;;
+    *)
+        echo "Отсутствует инструкция для подготовки seed-образа на вашей хостовой ОС: $(uname -s)" >&2
+        exit 1
+        ;;
+esac
 
-VBoxManage startvm $VMNAME --type headless
+VBoxManage createvm --name "$VM_NAME" --ostype "$VM_OSTYPE" --basefolder "$PWD"/vms --register
+VBoxManage modifyvm "$VM_NAME" --memory "$VM_MEMORY_MB" --cpus "$VM_CPUS" --nic1 bridged --bridgeadapter1 "$BRIDGE_ADAPTER" --graphicscontroller none --uart1 0x3F8 4 --uartmode1 file "$PWD"/vms/"$VM_NAME"/console.log
 
-exit 0;
+VBoxManage storagectl "$VM_NAME" --name VirtIO --add virtio --controller VirtIO
+VBoxManage storageattach "$VM_NAME" --storagectl VirtIO --port 0 --device 0 --type hdd --medium "$BASE_IMAGE" --mtype immutable
+VBoxManage storageattach "$VM_NAME" --storagectl VirtIO --port 1 --device 0 --type dvddrive --medium "$BUILD_DIR"/seed.iso
+
+VBoxManage startvm "$VM_NAME" --type headless
+

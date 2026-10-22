@@ -1,22 +1,18 @@
 #!/bin/bash
+set -euo pipefail
 
-VMNAME=$1
+ENV_FILE="./hosts/${2:-$(hostname)}.env"
 
-if [ -z $VMNAME ]
-then
-    echo "vm's name is required"
-    exit 1;
+source "$ENV_FILE"
+
+VM_NAME="${1:?не указан параметр VM_NAME}"
+
+VBoxManage controlvm "$VM_NAME" poweroff || true
+VBoxManage unregistervm "$VM_NAME" --delete
+if [ "${VM_IP:-}" ]; then
+    echo "попали в условие"
+    ssh-keygen -R "$VM_IP"
 fi
+rm -R ./vms/"$VM_NAME"
+rm ./builds/"$VM_NAME"/seed.iso
 
-if [[ ! -e "$PWD/template/$VMNAME" ]]
-then
-    echo "cloud-init template not found"
-    exit 1;
-fi
-
-VBoxManage controlvm $VMNAME poweroff
-VBoxManage unregistervm $VMNAME --delete
-rm -R "$PWD/vms/$VMNAME"
-rm "$PWD/template/$VMNAME/seed.iso"
-
-exit 0;
