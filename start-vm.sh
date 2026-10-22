@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-ENV_FILE="./hosts/${2:-$(hostname)}.env"
+ENV_FILE="$PWD/hosts/${2:-$(hostname)}.env"
 
 if [ ! -f "$ENV_FILE" ]; then 
     echo>&2 "Профиль не найден: $ENV_FILE"
@@ -16,9 +16,9 @@ fi
 source "$ENV_FILE"
 
 VM_NAME="${1:?не указан параметр VM_NAME}"
-BUILD_DIR="./builds/$VM_NAME"
-BASE_IMAGE="./images/ubuntu.vdi"
-SEED_DIR="./template/test/test1"
+BUILD_DIR="$PWD/builds/$VM_NAME"
+BASE_IMAGE="$PWD/images/ubuntu.vdi"
+SEED_DIR="$PWD/template/$VM_NAME/config"
 
 mkdir -p "$BUILD_DIR"
 
