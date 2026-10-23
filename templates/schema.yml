@@ -1,0 +1,9 @@
+#@data/values-schema
+---
+hostname: "service1-pc"
+#@schema/default ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNGNalvaVE5YRMolH7FtDRaDe7zK1Lzf1nRIvJUdrzt"]
+ssh_keys:
+  - ""
+#@schema/default ["htop", "tree"]
+packages:
+  - ""

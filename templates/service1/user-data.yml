@@ -1,0 +1,18 @@
+#@ load("@ytt:data", "data")
+
+hostname: #@ data.values.hostname
+
+users:
+  - name: root
+    ssh_authorized_keys:
+      #@ for ssh_key in data.values.ssh_keys:
+      -  #@ ssh_key
+      #@ end
+ssh_pwauth: false
+disable_root: false
+
+package_update: true
+packages:
+  #@ for package in data.values.packages:
+  -  #@ package
+  #@ end
