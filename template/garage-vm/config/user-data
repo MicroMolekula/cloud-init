@@ -10,10 +10,10 @@ disable_root: false
 
 write_files:
   - path: /etc/garage.toml
-    permissions: '0600'
+    permissions: '0644'
     content: |
-      metadata_dir = "/tmp/meta"
-      data_dir = "/tmp/data"
+      metadata_dir="/var/lib/garage/meta"
+      data_dir="/var/lib/garage/data"
       db_engine = "sqlite"
 
       replication_factor = 1
@@ -40,12 +40,34 @@ write_files:
   - permissions: "0711"
     defer: true
     source:
-      uri: https://garagehq.deuxfleurs.fr/_releases/v2.4.1/aarch64-unknown-linux-musl/garage
+      uri: http://192.168.1.42:8080/garage
     path: /usr/bin/garage
+  - permissions: "644"
+    path: /etc/systemd/system/garage.service
+    content: |
+      [Unit]
+      Description=Garage Data Store
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Environment='RUST_LOG=garage=info' 'RUST_BACKTRACE=1'
+      ExecStart=/usr/bin/garage server
+      StateDirectory=garage
+      DynamicUser=true
+      ProtectHome=true
+      NoNewPrivileges=true
+      LimitNOFILE=42000
+
+      [Install]
+      WantedBy=multi-user.target
+
     
 runcmd:
   - sed -i "s|@RPC_SECRET|$(openssl rand -hex 32)|g" /etc/garage.toml
   - sed -i "s|@ADMIN_TOKEN|$(openssl rand -base64 32)|g" /etc/garage.toml
   - sed -i "s|@METRICS_TOKEN|$(openssl rand -base64 32)|g" /etc/garage.toml
+  - systemctl start garage
+  - systemctl enable garage
 
 
