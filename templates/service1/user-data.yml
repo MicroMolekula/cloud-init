@@ -4,9 +4,10 @@ hostname: #@ data.values.hostname
 
 users:
   - name: root
+    lock_passwd: false
     ssh_authorized_keys:
       #@ for ssh_key in data.values.ssh_keys:
-      -  #@ ssh_key
+        -  #@ ssh_key
       #@ end
 ssh_pwauth: false
 disable_root: false

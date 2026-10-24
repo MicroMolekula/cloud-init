@@ -18,3 +18,8 @@ VBoxManage modifymedium disk ./images/ubuntu.vdi --resize 20480
 ```bash
 echo "#cloud-config" > builds/service1/user-data && ytt -f templates/schema.yml -f templates/service1/user-data.yml >> builds/service1/user-data
 ```
+
+Запуск nginx на хосте для раздачи файлов, чтобы можно было их прокидывать в ВМ:
+```bash
+docker run -d --name nginx-static -p 8080:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx
+```

@@ -28,7 +28,7 @@ fi
 
 mkdir -p "$BUILD_DIR"
 
-echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f "$USER_DATA_DIR" >> "$BUILD_DIR/user-data"
+echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f "$PWD/templates/values.yml" -f "$USER_DATA_DIR" >> "$BUILD_DIR/user-data"
 
 case "$(uname -s)" in
     Linux)
