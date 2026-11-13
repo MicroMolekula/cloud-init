@@ -12,6 +12,6 @@ VBoxManage unregistervm "$VM_NAME" --delete
 if [ "${VM_IP:-}" ]; then
     ssh-keygen -R "$VM_IP"
 fi
-rm -R ./vms/"$VM_NAME"
-rm -R ./builds/"$VM_NAME"
+rm -rf ./vms/"$VM_NAME"
+rm -rf ./builds/"$VM_NAME"
 
