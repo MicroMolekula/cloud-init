@@ -1,0 +1,4 @@
+#@ load("@ytt:data", "data")
+
+local-hostname: #@ data.values.hostname
+instance-id: #@ data.values.instance_id

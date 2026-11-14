@@ -28,11 +28,13 @@ fi
 
 mkdir -p "$BUILD_DIR"
 
-echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR" >> "$BUILD_DIR/user-data"
+echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/user-data.yml" >> "$BUILD_DIR/user-data"
+ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/meta-data.yml" > "$BUILD_DIR/meta-data"
+ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/network-config.yml" > "$BUILD_DIR/network-config"
 
 case "$(uname -s)" in
     Linux)
-        cloud-localds -N "$SEED_DIR"/network-config "$BUILD_DIR"/seed.iso "$BUILD_DIR"/user-data "$SEED_DIR"/meta-data
+        cloud-localds -N "$BUILD_DIR"/network-config "$BUILD_DIR"/seed.iso "$BUILD_DIR"/user-data "$BUILD_DIR"/meta-data
         ;;
     Darwin)
         rm -f "$BUILD_DIR/seed.iso"

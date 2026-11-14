@@ -1,7 +1,12 @@
 #@data/values-schema
 ---
+instance_id: ""
 hostname: ""
 ssh_keys:
+  - ""
+ip_address: ""
+gateway: ""
+dns_servers:
   - ""
 #@schema/default ["htop", "tree"]
 packages:
