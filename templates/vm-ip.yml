@@ -1,0 +1,3 @@
+#@ load("@ytt:data", "data")
+---
+ip: #@ data.values.ip_address
