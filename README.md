@@ -16,7 +16,7 @@ VBoxManage modifymedium disk ./images/ubuntu.vdi --resize 20480
 - Запись валидного user-data файла в результате заполнения шаблона с помощью ytt
 
 ```bash
-echo "#cloud-config" > builds/service1/user-data && ytt -f templates/schema.yml -f templates/service1/user-data.yml >> builds/service1/user-data
+echo "#cloud-config" > builds/service1/user-data && ytt -f templates/schema.yml -f sites/home/common.yml -f sites/home/service1.yml -f templates/service1/meta-data.yml >> builds/service1/user-data
 ```
 
 Запуск nginx на хосте для раздачи файлов, чтобы можно было их прокидывать в ВМ:

@@ -1,0 +1,5 @@
+#@data/values
+---
+hostname: "service1-pc"
+instance_id: "service1-id"
+ip_address: "192.168.0.229/24"
