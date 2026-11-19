@@ -16,12 +16,13 @@ fi
 source "$ENV_FILE"
 
 VM_NAME="${1:?не указан параметр VM_NAME}"
-BUILD_DIR="$PWD/builds/$VM_NAME"
+SITE_NAME="${3:-home}"
+BUILD_DIR="$PWD/builds/$SITE_NAME/$VM_NAME"
 BASE_IMAGE="$PWD/images/ubuntu.vdi"
 SEED_DIR="$PWD/template/$VM_NAME/config"
 USER_DATA_DIR="$PWD/templates/$VM_NAME"
 
-bash create-vm-ytt.sh "$VM_NAME"
+bash create-seed-ytt.sh "$VM_NAME" "$SITE_NAME"
 
 VBoxManage createvm --name "$VM_NAME" --ostype "$VM_OSTYPE" --basefolder "$PWD"/vms --register
 VBoxManage modifyvm "$VM_NAME" --memory "$VM_MEMORY_MB" --cpus "$VM_CPUS" --nic1 bridged --bridgeadapter1 "$BRIDGE_ADAPTER" --graphicscontroller none --uart1 0x3F8 4 --uartmode1 file "$PWD"/vms/"$VM_NAME"/console.log

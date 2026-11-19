@@ -2,7 +2,8 @@
 set -euo pipefail
 
 VM_NAME="${1:?не указан параметр VM_NAME}"
-BUILD_DIR="$PWD/builds/$VM_NAME"
+SITE_NAME="${2:-home}"
+BUILD_DIR="$PWD/builds/$SITE_NAME/$VM_NAME"
 BASE_IMAGE="$PWD/images/ubuntu.vdi"
 SEED_DIR="$PWD/template/$VM_NAME/config"
 USER_DATA_DIR="$PWD/templates/$VM_NAME"
@@ -14,9 +15,9 @@ fi
 
 mkdir -p "$BUILD_DIR"
 
-echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/data-base.yml" -f "$USER_DATA_DIR/user-data.yml" >> "$BUILD_DIR/user-data"
-ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/meta-data.yml" > "$BUILD_DIR/meta-data"
-ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/home/common.yml" -f "$PWD/sites/home/$VM_NAME.yml" -f "$USER_DATA_DIR/network-config.yml" > "$BUILD_DIR/network-config"
+echo "#cloud-config" > "$BUILD_DIR/user-data" && ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/$SITE_NAME/common.yml" -f "$PWD/sites/$SITE_NAME/$VM_NAME.yml" -f "$USER_DATA_DIR/data-base.yml" -f "$USER_DATA_DIR/user-data.yml" >> "$BUILD_DIR/user-data"
+ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/$SITE_NAME/common.yml" -f "$PWD/sites/$SITE_NAME/$VM_NAME.yml" -f "$USER_DATA_DIR/meta-data.yml" > "$BUILD_DIR/meta-data"
+ytt -f "$PWD/templates/schema.yml" -f  "$PWD/sites/$SITE_NAME/common.yml" -f "$PWD/sites/$SITE_NAME/$VM_NAME.yml" -f "$USER_DATA_DIR/network-config.yml" > "$BUILD_DIR/network-config"
 
 case "$(uname -s)" in
     Linux)
