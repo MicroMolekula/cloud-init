@@ -8,6 +8,5 @@ ip_address: ""
 gateway: ""
 dns_servers:
   - ""
-#@schema/default ["htop", "tree"]
 packages:
   - ""
