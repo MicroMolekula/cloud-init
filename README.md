@@ -1,25 +1,38 @@
-- Конвертация образа из формата qcow2 (.img) в формат .vdi:
+# Запуск виртуальных машин с cloud-init
+
+Скрипты в этом репозитории подготавливают конфигурацию cloud-init и запускают виртуальную машину VirtualBox на хосте с Ubuntu. При первой загрузке ВМ получает имя хоста, статический IP и SSH-ключи из конфигурации. Пакеты `htop` и `tree` устанавливаются автоматически.
+
+## Подготовка
+
+На хосте нужны VirtualBox, `ytt` и `cloud-localds` из пакета `cloud-image-utils`. Базовый диск должен лежать в `images/ubuntu.vdi`. Его можно получить из облачного образа Ubuntu 24.04 с помощью `qemu-img` из пакета `qemu-utils`:
 
 ```bash
-qemu-img convert -p -f qcow2 -O vdi ./images/noble-server-cloudimg-amd64.img ./images/ubuntu.vdi
+qemu-img convert -p -f qcow2 -O vdi images/noble-server-cloudimg-amd64.img images/ubuntu.vdi
 ```
 
-- Увеличение виртуального диска до 20 ГБ
+Настройки сети и ВМ для площадки `home` лежат в `sites/home/`. Шаблоны cloud-init находятся в `templates/`, а параметры VirtualBox для хоста, включая имя сетевого адаптера, задаются в `hosts/*.env`. В примере ниже используется профиль `sergey-PC`. На другом компьютере укажите свой профиль и проверьте, что IP ВМ свободен и подходит для вашей сети.
+
+## Запуск и проверка
+
+Команды выполняются из корня репозитория. Скрипт запуска сам собирает `builds/home/service1/seed.iso` и подключает его к ВМ.
 
 ```bash
-VBoxManage modifymedium disk ./images/ubuntu.vdi --resize 20480
+bash start-vm-ytt.sh service1 sergey-PC home
+ssh root@192.168.0.229 'hostname; cloud-init status --wait; dpkg-query -W htop tree'
 ```
 
-- В start-vm.sh
-  нужно изменить Ubuntu_arm64, "en0: Wi-Fi"
+Для входа используйте ключ, чей публичный ключ указан в конфигурации площадки. При проверке ВМ ответила с именем `service1-pc`, cloud-init завершился со статусом `done`, оба пакета были установлены.
 
-- Запись валидного user-data файла в результате заполнения шаблона с помощью ytt
+ISO можно собрать отдельно, без запуска ВМ:
 
 ```bash
-echo "#cloud-config" > builds/service1/user-data && ytt -f templates/schema.yml -f sites/home/common.yml -f sites/home/service1.yml -f templates/service1/meta-data.yml >> builds/service1/user-data
+bash create-seed-ytt.sh service1 home
 ```
 
-Запуск nginx на хосте для раздачи файлов, чтобы можно было их прокидывать в ВМ:
+## Удаление ВМ
+
+Для проверки удаления использовалась отдельная ВМ `service2` с адресом `192.168.0.230`. После подключения по SSH её ключ появился в `~/.ssh/known_hosts`.
+
 ```bash
-docker run -d --name nginx-static -p 8080:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx
+bash delete-vm.sh service2 home
 ```
